@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <title>Rachio</title>
+    <link href="css/css.css" type="text/css" rel="stylesheet" />
+    <!--[if lt IE 9]>
+      <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js"></script>
+    <script src="script/script.js" type="text/javascript"></script>
+</head>
+<body ng-app="rachioZones" ng-controller="user">
+    <header>
+        <h2>Hello {{user.fullName}},</h2>
+        <ul ng-repeat="device in user.devices" ng-init="getCurrentSchedule(device.id)">
+            <li>
+                <h3>Your {{device.name}} is {{device.status}}</h3>
+                <div class="currentZone">
+                    <h3>Current Zone - <button ng-click="StartAllZone(device.scheduleRules[0].zones, device)">Start All Zone</button> </h3>
+                    <div>Please select your zone to start</div>
+                    <ul ng-repeat="scheduleZone in device.scheduleRules[0].zones  | orderBy:'zoneNumber'">
+                        <li>
+                            <p>Zone Number: {{scheduleZone.zoneNumber}}</p>
+                            <p>Duration: {{scheduleZone.duration}}</p>
+                            <p><button ng-click="StartZone(scheduleZone, device)">Start Zone {{scheduleZone.zoneNumber}}</button></p>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+        </ul>
+    </header>
+    <main>
+        <div id="status" ng-show="currentSchedule">
+            <p>Status: {{currentSchedule.status}}</p>
+            <p>Zone Name: {{zone.name}}</p>
+            <p>Zone Number: {{zone.zoneNumber}}</p>
+        </div>
+    </main>
+    <footer></footer>
+</body>
+</html>
