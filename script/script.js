@@ -49,8 +49,9 @@ let rachioApi = function ($http) {
 let module = angular.module("rachioZones");
 module.factory("rachioApi", rachioApi);
 
-let MainController = function (
-       $scope, rachioApi) {    
+let MainController = function ($scope, rachioApi, $interval) {
+    let stop;
+    let loop = 0;
     let onUserIdComplete = function (data) {
         $scope.userId = data.id;
         rachioApi.getUserInfo($scope.userId).then(onUserData, onError);
@@ -65,32 +66,40 @@ let MainController = function (
         if (!$.isEmptyObject(data)) {
             $scope.currentSchedule = data;
             rachioApi.getZoneInfo(data.zoneId).then(onZoneComplete, onError);
-        }        
+        }
+        else {
+            if (loop > 0) {
+                $interval.cancel(stop);
+            }            
+        }
+        loop++;
     };
 
     let onZoneComplete = function (data) {
         $scope.zone = data;
-        $("#status").show();
     };
 
     let onError = function (reason) {
         $scope.error = "Could not fetch the data.";
     };
-    
-    $scope.getCurrentSchedule = function (id) {
-        rachioApi.getCurrentScheduleInfo(id).then(onCurrentScheduleComplete, onError);
-    };
 
-    $scope.StartAllZone = function (allZones, device, $timeout) {
+    $scope.getCurrentSchedule = function (id) {
+        let schedule = function () { rachioApi.getCurrentScheduleInfo(id).then(onCurrentScheduleComplete, onError); }
+        schedule();
+        stop = $interval(schedule, 30000);
+    };
+   
+
+    $scope.StartAllZone = function (allZones, device) {
         let data = { "zones": [] };
         for (let x in allZones) {            
             data.zones.push({ "id": allZones[x].zoneId, "duration": allZones[x].duration, "sortOrder": allZones[x].sortOrder });
         };        
-        rachioApi.putZoneAllInfo(data).then($timeout(rachioApi.getCurrentScheduleInfo(device.id).then(onCurrentScheduleComplete, onError), 300));
+        rachioApi.putZoneAllInfo(data).then($scope.getCurrentSchedule(device.id));
     };
 
     $scope.StartZone = function (zone, device) {
-        rachioApi.putZoneInfo(zone.zoneId, zone.duration).then(rachioApi.getCurrentScheduleInfo(device.id).then(onCurrentScheduleComplete, onError));
+        rachioApi.putZoneInfo(zone.zoneId, zone.duration).then($scope.getCurrentSchedule(device.id));
     };
 
     rachioApi.getUserId().then(onUserIdComplete, onError);
